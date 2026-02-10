@@ -1,6 +1,10 @@
 # Codigo/generar_reporte.py
 
 import os
+
+# Solución para error "OMP: Error #15: Initializing libomp.dll..."
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import torch
 from torchvision import transforms
 from PIL import Image, ImageDraw, ImageFont

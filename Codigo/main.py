@@ -1,12 +1,16 @@
 # Codigo/main.py
 
+import os
+
+# Solución para error "OMP: Error #15: Initializing libomp.dll..."
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from Codigo import config
 from Codigo.utils import data_loader
 from Codigo import modelo_cnn
-import os
 
 # Configurar dispositivo
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
