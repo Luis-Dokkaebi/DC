@@ -23,6 +23,11 @@ torch.manual_seed(config.SEED)
 train_loader, val_loader, clases = data_loader.get_data_loaders()
 print(f"Clases detectadas: {clases}")
 
+if len(clases) < 2:
+    print("\n❌ ERROR CRÍTICO: Se necesitan al menos 2 clases para entrenar (ej. 'Grieta' y 'Sin_Grieta').")
+    print("   Actualmente solo se detectó una clase. Agrega más carpetas en 'Imagenes/' con ejemplos negativos.\n")
+    exit(1)
+
 # Crear modelo
 modelo = modelo_cnn.CNNBasica(num_classes=len(clases)).to(device)
 
@@ -69,3 +74,10 @@ os.makedirs(config.MODELOS_DIR, exist_ok=True)
 modelo_path = os.path.join(config.MODELOS_DIR, 'modelo_cnn.pth')
 torch.save(modelo.state_dict(), modelo_path)
 print(f"💾 Modelo guardado en: {modelo_path}")
+
+# Guardar lista de clases
+clases_path = os.path.join(config.MODELOS_DIR, 'clases.txt')
+with open(clases_path, 'w') as f:
+    for c in clases:
+        f.write(c + '\n')
+print(f"📋 Lista de clases guardada en: {clases_path}")

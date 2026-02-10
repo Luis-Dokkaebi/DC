@@ -122,6 +122,13 @@ def generar_pdf(resultados, conteo):
 
 # MAIN
 if __name__ == "__main__":
+    # Verificar si hay imágenes para clasificar
+    if not os.path.exists('Datos') or not os.listdir('Datos'):
+        print("\n⚠️ ALERTA: La carpeta 'Datos/' está vacía o no existe.")
+        print("   Por favor coloca las imágenes que quieres analizar en 'Datos/'.")
+        print("   (Puedes tomar capturas de tus PDF o usar imágenes nuevas).\n")
+        exit()
+
     os.makedirs(config.RESULTADOS_DIR, exist_ok=True)
 
     transform = transforms.Compose([
@@ -130,12 +137,35 @@ if __name__ == "__main__":
         transforms.Normalize([0.5]*3, [0.5]*3)
     ])
 
-    modelo = cargar_modelo(os.path.join(config.MODELOS_DIR, 'modelo_cnn.pth'), config.NUM_CLASSES)
-    clases = sorted(os.listdir(config.IMAGENES_DIR))  # nombres de carpetas = clases
+    # Intentar cargar clases desde archivo guardado
+    clases_path = os.path.join(config.MODELOS_DIR, 'clases.txt')
+    if os.path.exists(clases_path):
+        with open(clases_path, 'r') as f:
+            clases = [line.strip() for line in f.readlines()]
+        print(f"📋 Clases cargadas: {clases}")
+        num_classes = len(clases)
+    else:
+        print("⚠️ No se encontró lista de clases, usando configuración por defecto...")
+        if os.path.exists(config.IMAGENES_DIR):
+             clases = sorted(os.listdir(config.IMAGENES_DIR))
+        else:
+             clases = ["Clase_0", "Clase_1"] # Fallback
+        num_classes = len(clases)
+
+    try:
+        modelo = cargar_modelo(os.path.join(config.MODELOS_DIR, 'modelo_cnn.pth'), num_classes)
+    except RuntimeError as e:
+        print(f"\n❌ Error al cargar el modelo: {e}")
+        print("   Posiblemente el modelo fue entrenado con un número diferente de clases.")
+        print("   Intenta re-entrenar ejecutando: python Codigo/main.py\n")
+        exit()
 
     resultados = clasificar_imagenes(modelo, transform, clases)
-    conteo = Counter([etq for _, etq, _ in resultados])
 
-    guardar_grafica_conteo(conteo, os.path.join(config.RESULTADOS_DIR, "grafica_conteo.png"))
-    generar_word(resultados, conteo)
-    generar_pdf(resultados, conteo)
+    if not resultados:
+        print("⚠️ No se encontraron imágenes válidas en 'Datos/'.")
+    else:
+        conteo = Counter([etq for _, etq, _ in resultados])
+        guardar_grafica_conteo(conteo, os.path.join(config.RESULTADOS_DIR, "grafica_conteo.png"))
+        generar_word(resultados, conteo)
+        generar_pdf(resultados, conteo)

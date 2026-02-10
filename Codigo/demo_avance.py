@@ -72,12 +72,17 @@ def main():
 
     entrada_path = sys.argv[1]
 
-    # Obtener clases (nombres de carpetas en Imagenes/)
-    if not os.path.exists(config.IMAGENES_DIR):
-        print(f"❌ Error: No existe el directorio de imágenes {config.IMAGENES_DIR}")
-        return
-
-    clases = sorted(os.listdir(config.IMAGENES_DIR))
+    # Intentar cargar clases desde archivo guardado
+    clases_path = os.path.join(config.MODELOS_DIR, 'clases.txt')
+    if os.path.exists(clases_path):
+        with open(clases_path, 'r') as f:
+            clases = [line.strip() for line in f.readlines()]
+    else:
+        # Fallback
+        if not os.path.exists(config.IMAGENES_DIR):
+            print(f"❌ Error: No existe el directorio de imágenes {config.IMAGENES_DIR}")
+            return
+        clases = sorted(os.listdir(config.IMAGENES_DIR))
 
     # Cargar modelo
     modelo_path = os.path.join(config.MODELOS_DIR, 'modelo_cnn.pth')
