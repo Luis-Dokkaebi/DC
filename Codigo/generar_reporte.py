@@ -1,6 +1,11 @@
 # Codigo/generar_reporte.py
 
 import os
+import sys
+
+# Agregar el directorio raíz al path para poder importar Codigo
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import torch
 from torchvision import transforms
 from PIL import Image, ImageDraw, ImageFont
@@ -21,12 +26,35 @@ def cargar_modelo(ruta_modelo, num_clases):
     modelo.eval()
     return modelo
 
+# Calcular avance de obra
+def calcular_avance(conteo):
+    max_orden = 0
+    etapa_actual = "Desconocida"
+    avance_porcentaje = 0
+
+    if not config.ETAPAS:
+        return "No configurado", 0
+
+    clases_detectadas = conteo.keys()
+
+    for clase in clases_detectadas:
+        # Busca coincidencia parcial o exacta en las claves de config.ETAPAS
+        # Por ejemplo, si la clase es 'Zapata_Frente', busca si contiene 'Zapata'
+        for key_etapa, info in config.ETAPAS.items():
+            if key_etapa.lower() in clase.lower():
+                if info["orden"] > max_orden:
+                    max_orden = info["orden"]
+                    etapa_actual = key_etapa
+                    avance_porcentaje = info["avance"]
+
+    return etapa_actual, avance_porcentaje
+
 # Clasificar imágenes de "Datos/"
 def clasificar_imagenes(modelo, transform, clases):
     resultados = []
-    for nombre_archivo in os.listdir('Datos'):
+    for nombre_archivo in os.listdir(config.DATOS_DIR):
         if nombre_archivo.lower().endswith(('.jpg', '.jpeg', '.png')):
-            ruta = os.path.join('Datos', nombre_archivo)
+            ruta = os.path.join(config.DATOS_DIR, nombre_archivo)
             try:
                 img = Image.open(ruta).convert('RGB')
                 entrada = transform(img).unsqueeze(0)
@@ -55,9 +83,20 @@ def guardar_grafica_conteo(conteo, ruta):
 # Crear documento Word
 def generar_word(resultados, conteo):
     doc = Document()
-    doc.add_heading('Reporte de Clasificación - Word', level=1)
+    doc.add_heading('Reporte de Clasificación y Avance de Obra', level=1)
+
+    # Calcular avance
+    etapa, porcentaje = calcular_avance(conteo)
+
+    doc.add_heading('Resumen de Avance', level=2)
+    p = doc.add_paragraph()
+    p.add_run(f'Etapa actual detectada: ').bold = True
+    p.add_run(f'{etapa}\n')
+    p.add_run(f'Avance estimado de obra: ').bold = True
+    p.add_run(f'{porcentaje}%')
 
     total = sum(conteo.values())
+    doc.add_heading('Detalles de Clasificación', level=2)
     doc.add_paragraph(f'Total de imágenes clasificadas: {total}')
 
     tabla = doc.add_table(rows=1, cols=2)
@@ -92,12 +131,20 @@ def generar_pdf(resultados, conteo):
     c = canvas.Canvas(pdf_path, pagesize=letter)
     width, height = letter
 
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, height - 50, "Reporte de Clasificación - PDF")
-    c.setFont("Helvetica", 12)
-    c.drawString(50, height - 80, f"Total imágenes: {sum(conteo.values())}")
+    # Calcular avance
+    etapa, porcentaje = calcular_avance(conteo)
 
-    y = height - 110
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, height - 50, "Reporte de Avance de Obra")
+
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, height - 80, f"Etapa actual: {etapa}")
+    c.drawString(300, height - 80, f"Avance estimado: {porcentaje}%")
+
+    c.setFont("Helvetica", 12)
+    c.drawString(50, height - 110, f"Total imágenes procesadas: {sum(conteo.values())}")
+
+    y = height - 140
     for clase, cant in conteo.items():
         c.drawString(60, y, f"{clase}: {cant}")
         y -= 20
@@ -119,6 +166,11 @@ def generar_pdf(resultados, conteo):
 # MAIN
 if __name__ == "__main__":
     os.makedirs(config.RESULTADOS_DIR, exist_ok=True)
+
+    # Verificar si hay imágenes en Datos
+    if not os.path.exists(config.DATOS_DIR) or not any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in os.listdir(config.DATOS_DIR)):
+        print(f"⚠️ Alerta: No se encontraron imágenes en {config.DATOS_DIR}. Asegúrate de poner las imágenes a clasificar en la carpeta 'Datos'.")
+        sys.exit()
 
     transform = transforms.Compose([
         transforms.Resize(config.IMAGE_SIZE),
