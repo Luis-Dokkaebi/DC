@@ -60,8 +60,12 @@ def clasificar_imagenes(modelo, transform, clases):
                 entrada = transform(img).unsqueeze(0)
                 salida = modelo(entrada)
                 _, pred = torch.max(salida, 1)
-                etiqueta = clases[pred.item()]
-                resultados.append((nombre_archivo, etiqueta, ruta))
+                idx = pred.item()
+                if idx < len(clases):
+                    etiqueta = clases[idx]
+                    resultados.append((nombre_archivo, etiqueta, ruta))
+                else:
+                    print(f"⚠️ Advertencia: El modelo predijo la clase {idx}, pero solo hay {len(clases)} clases definidas.")
             except Exception as e:
                 print(f"⚠️ Error con {nombre_archivo}: {e}")
     return resultados
@@ -179,7 +183,8 @@ if __name__ == "__main__":
     ])
 
     modelo = cargar_modelo(os.path.join(config.MODELOS_DIR, 'modelo_cnn.pth'), config.NUM_CLASSES)
-    clases = sorted(os.listdir(config.IMAGENES_DIR))  # nombres de carpetas = clases
+    # nombres de carpetas = clases
+    clases = sorted([d for d in os.listdir(config.IMAGENES_DIR) if os.path.isdir(os.path.join(config.IMAGENES_DIR, d))])
 
     resultados = clasificar_imagenes(modelo, transform, clases)
     conteo = Counter([etq for _, etq, _ in resultados])
