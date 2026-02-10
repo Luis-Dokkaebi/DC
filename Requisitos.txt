@@ -1,0 +1,6 @@
+torch
+torchvision
+matplotlib
+python-docx
+reportlab
+Pillow
