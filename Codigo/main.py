@@ -1,5 +1,11 @@
 # Codigo/main.py
 
+import sys
+import os
+
+# Agregar el directorio raíz al path para poder importar Codigo
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import torch
 import torch.nn as nn
 import torch.optim as optim

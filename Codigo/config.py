@@ -9,6 +9,7 @@ CODIGO_DIR = os.path.join(BASE_DIR, 'Codigo')
 UTILS_DIR = os.path.join(CODIGO_DIR, 'utils')
 MODELOS_DIR = os.path.join(BASE_DIR, 'Modelos')
 RESULTADOS_DIR = os.path.join(BASE_DIR, 'Resultados')
+DATOS_DIR = os.path.join(BASE_DIR, 'Datos')
 
 # Parámetros de entrenamiento
 BATCH_SIZE = 32

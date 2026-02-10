@@ -1,6 +1,11 @@
 # Codigo/generar_reporte.py
 
 import os
+import sys
+
+# Agregar el directorio raíz al path para poder importar Codigo
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import torch
 from torchvision import transforms
 from PIL import Image, ImageDraw, ImageFont
@@ -24,9 +29,9 @@ def cargar_modelo(ruta_modelo, num_clases):
 # Clasificar imágenes de "Datos/"
 def clasificar_imagenes(modelo, transform, clases):
     resultados = []
-    for nombre_archivo in os.listdir('Datos'):
+    for nombre_archivo in os.listdir(config.DATOS_DIR):
         if nombre_archivo.lower().endswith(('.jpg', '.jpeg', '.png')):
-            ruta = os.path.join('Datos', nombre_archivo)
+            ruta = os.path.join(config.DATOS_DIR, nombre_archivo)
             try:
                 img = Image.open(ruta).convert('RGB')
                 entrada = transform(img).unsqueeze(0)
@@ -119,6 +124,11 @@ def generar_pdf(resultados, conteo):
 # MAIN
 if __name__ == "__main__":
     os.makedirs(config.RESULTADOS_DIR, exist_ok=True)
+
+    # Verificar si hay imágenes en Datos
+    if not os.path.exists(config.DATOS_DIR) or not any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in os.listdir(config.DATOS_DIR)):
+        print(f"⚠️ Alerta: No se encontraron imágenes en {config.DATOS_DIR}. Asegúrate de poner las imágenes a clasificar en la carpeta 'Datos'.")
+        sys.exit()
 
     transform = transforms.Compose([
         transforms.Resize(config.IMAGE_SIZE),
