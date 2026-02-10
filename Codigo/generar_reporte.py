@@ -179,7 +179,8 @@ if __name__ == "__main__":
     ])
 
     modelo = cargar_modelo(os.path.join(config.MODELOS_DIR, 'modelo_cnn.pth'), config.NUM_CLASSES)
-    clases = sorted(os.listdir(config.IMAGENES_DIR))  # nombres de carpetas = clases
+    # nombres de carpetas = clases
+    clases = sorted([d for d in os.listdir(config.IMAGENES_DIR) if os.path.isdir(os.path.join(config.IMAGENES_DIR, d))])
 
     resultados = clasificar_imagenes(modelo, transform, clases)
     conteo = Counter([etq for _, etq, _ in resultados])
