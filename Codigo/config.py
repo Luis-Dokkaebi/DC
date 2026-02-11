@@ -34,3 +34,14 @@ ETAPAS = {
     "Acabados": {"orden": 8, "avance": 95},
     "Entrega": {"orden": 9, "avance": 100}
 }
+
+# Configuración del Reporte PDF
+REPORT_CONFIG = {
+    "project_name": "EXPANSION PROJECT",
+    "report_number": "018",
+    "location": "APODACA, N.L.",
+    "contractor": "NIDEC LEROY SOMER",
+    "logo_path": os.path.join(UTILS_DIR, "logo.png"), # Placeholder
+    "header_text": "WEEKLY REPORT",
+    "footer_text": "CONSTRUCTION PROGRESS REPORT"
+}
